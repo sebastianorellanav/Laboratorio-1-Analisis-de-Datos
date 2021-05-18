@@ -120,6 +120,13 @@ grafico(df_SN,aes(x = normalNucleoli, fill = class),"normalNucleoli")
 grafico(df_SN,aes(x = mitoses, fill = class),"mitoses")
 
 
+B = sum(df_SN$class == "Benigno",na.rm=TRUE)
+M = sum(df_SN$class == "Maligno",na.rm=TRUE)
+Tot = B+M
+PB= B/Tot
+PM= M/Tot
+cat("Totales:",Tot,"\nBenignos:",B,"Malignos:",M,"\nPorcentaje Benigno:",PB,"Porcentaje Maligno:",PM)
+
 
 
 
