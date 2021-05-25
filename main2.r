@@ -121,8 +121,37 @@ p1 <- ggboxplot(
   fill = "variable"
 )
 print(p1)
+df<-df[!(df$marginalAdhesion>8 | df$singleEpithCellSize>7 |
+          df$blandChromatin>9 | df$normalNucleoli>8 | df$mitoses>8),]
+
+df<-df[!is.na(df1$clumpThickness),]
+
+pruebas = df
+pruebas$id <- NULL
+pruebas$class<- NULL
+
+datos.long2<-melt(pruebas)
+p2 <- ggqqplot(
+  datos.long2,
+  x = "value",
+  color = "variable"
+)
+p2 <- p2 + facet_wrap(~ variable)
+print(p2)
+
+p1 <- ggboxplot(
+  datos.long2,
+  x = "variable", y = "value",
+  fill = "variable"
+)
+print(p1)
 
 
+distribucion <- apply(pruebas,2,shapiro.test)
+par(mfrow=c(3,3))
+#en cada uno de las columnas el p-valor es menor a 0.05, por lo que rechazamos en todas
+#Para verificar se revisara el histograma de cada columna (En caso de error, agrandar la seccion de graficos)
+ign<-mapply(hist,pruebas,main=colnames(pruebas),col="lightsteelblue",xlab="Puntaje")
 
 
 # #Aqui estará la cantidad de datos que se trabajará
