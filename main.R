@@ -40,6 +40,16 @@ df_SN=df[!(df$bareNuclei == "?"),] #SN= sin nulos
 #Se conbvierten todos a numericos
 df_SN[ , ] = apply(df_SN[ , ], 2,function(x) as.numeric(as.character(x)) )
 
+
+###casos <- factor(1:nrow(df_SN))
+#datos.long <- data.frame(
+#  casos,
+#  Alimento = factor(chickwts[["feed"]]),
+#  Peso = chickwts[["weight"]]
+#)
+
+
+
 #Se filtran las columnas id y class para calcular, medidas de centralización y dispersión
 df_sin_id_class = df_SN[ , 2:10]  
 medias = apply(df_sin_id_class, 2, mean)
@@ -74,18 +84,22 @@ tabla
 
 #Eliminamos el campo id, ya que es irrelevante para aplicar las pruebas de normalidad
 df_SN$id <- NULL
+
 #Se verifica si las variables siguen una distribución normal mediante shapiro test y un alfa estandar de 0.05
 #hipotesis nula
 #Los datos siguen una distribucion normal
 #hipostesis alternativa
 #Los datos no siguen una distribucion normal
 
-distribucion <- apply(df_SN,2,shapiro.test)
+distribucion <- apply(df_sin_id_class,2,shapiro.test)
+par(mfrow=c(3,3))
 #en cada uno de las columnas el p-valor es menor a 0.05, por lo que rechazamos en todas
-#Para verificar se revisara el histograma de cada columna
-apply(df_SN,2,hist)
+#Para verificar se revisara el histograma de cada columna (En caso de error, agrandar la seccion de graficos)
+
+ign<-mapply(hist,df_sin_id_class,main=colnames(df_sin_id_class),col="lightsteelblue",xlab="Puntaje")
+
 #Efectivamente, Ninguna sigue una distribuición normal, por lo que se opta por un test no paramétrico
-df.cor = cor(df_SN, method = 'spearman')
+df.cor = cor(df_sin_id_class, method = 'spearman')
 #Para luego realizar un grafico de calor con la matriz de correlacion
 ggcorrplot(df.cor, 
            hc.order = TRUE, 
@@ -109,15 +123,18 @@ grafico <- function(df,aes,y_string){
   ggdraw(boxplt)  
 }
 #y se llama para cada columna
-grafico(df_SN,aes(x = clumpThickness, fill = class),"clumpThickness")
-grafico(df_SN,aes(x = uniformityCellSize, fill = class),"uniformityCellSize")
-grafico(df_SN,aes(x = uniformityCellShape, fill = class),"uniformityCellShape")
-grafico(df_SN,aes(x = marginalAdhesion, fill = class),"marginalAdhesion")
-grafico(df_SN,aes(x = singleEpithCellSize, fill = class),"singleEpithCellSize")
-grafico(df_SN,aes(x = bareNuclei, fill = class),"bareNuclei")
-grafico(df_SN,aes(x = blandChromatin, fill = class),"blandChromatin")
-grafico(df_SN,aes(x = normalNucleoli, fill = class),"normalNucleoli")
-grafico(df_SN,aes(x = mitoses, fill = class),"mitoses")
+a<-grafico(df_SN,aes(x = clumpThickness, fill = class),"clumpThickness")
+b<-grafico(df_SN,aes(x = uniformityCellSize, fill = class),"uniformityCellSize")
+c<-grafico(df_SN,aes(x = uniformityCellShape, fill = class),"uniformityCellShape")
+d<-grafico(df_SN,aes(x = marginalAdhesion, fill = class),"marginalAdhesion")
+e<-grafico(df_SN,aes(x = singleEpithCellSize, fill = class),"singleEpithCellSize")
+f<-grafico(df_SN,aes(x = bareNuclei, fill = class),"bareNuclei")
+g<-grafico(df_SN,aes(x = blandChromatin, fill = class),"blandChromatin")
+h<-grafico(df_SN,aes(x = normalNucleoli, fill = class),"normalNucleoli")
+i<-grafico(df_SN,aes(x = mitoses, fill = class),"mitoses")
+ggarrange(a,b,c,d)
+ggarrange(e,f,g,h)
+i
 
 
 B = sum(df_SN$class == "Benigno",na.rm=TRUE)
@@ -127,6 +144,12 @@ PB= B/Tot
 PM= M/Tot
 cat("Totales:",Tot,"\nBenignos:",B,"Malignos:",M,"\nPorcentaje Benigno:",PB,"Porcentaje Maligno:",PM)
 
+# GRAFICO CIRCULAR
 
+valores <- c(PB, PM)
+etiquetas <- c("Benignos","Malignos")
+etiquetas <- paste(etiquetas,round(valores,2))
+etiquetas <- paste(etiquetas,"%",sep="")
+pie(valores, ,labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
 
 
