@@ -121,10 +121,16 @@ p1 <- ggboxplot(
   fill = "variable"
 )
 print(p1)
-df<-df[!(df$marginalAdhesion>8 | df$singleEpithCellSize>7 |
-          df$blandChromatin>9 | df$normalNucleoli>8 | df$mitoses>8),]
 
-df<-df[!is.na(df1$clumpThickness),]
+df$marginalAdhesion[df$marginalAdhesion > 5] <- mean(df$marginalAdhesion)
+df$singleEpithCellSize[df$singleEpithCellSize > 4] <- mean(df$singleEpithCellSize)
+df$blandChromatin[df$blandChromatin > 4] <- mean(df$blandChromatin)
+df$normalNucleoli[df$normalNucleoli > 5] <- mean(df$normalNucleoli)
+df$mitoses[df$mitoses > 2] <- mean(df$mitoses)
+#df<-df[!(df$marginalAdhesion>8 | df$singleEpithCellSize>7 |
+#          df$blandChromatin>9 | df$normalNucleoli>8 | df$mitoses>8),]
+
+#df<-df[!is.na(df1$clumpThickness),]
 
 pruebas = df
 pruebas$id <- NULL
@@ -137,7 +143,7 @@ p2 <- ggqqplot(
   color = "variable"
 )
 p2 <- p2 + facet_wrap(~ variable)
-print(p2)
+#print(p2)
 
 p1 <- ggboxplot(
   datos.long2,
