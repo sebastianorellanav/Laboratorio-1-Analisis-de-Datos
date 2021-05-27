@@ -1,22 +1,23 @@
 ######################################################################################################
-###########################    Laboratorio 1 - Análisis de Datos    ##################################
+###########################    Laboratorio 1 - An?lisis de Datos    ##################################
 ######################################################################################################
 ###########################    Autores:     Gary Simken             ##################################
-###########################                 Sebastián Orellana      ##################################
+###########################                 Sebasti?n Orellana      ##################################
 ###########################    Fecha:       27 - Mayo - 2021        ##################################
 ######################################################################################################
 
 ######################################################################################################
 ##########################            Bibliotecas          ###########################################
 library(modeest)
+library(ggplot2)
 library(ggpubr)
 library(cowplot)
-library(corrplot)
 library(ggcorrplot)
 library(reshape2)
 library(RColorBrewer)
 
-# Se eliminan los gráficos y variables antiguas
+
+# Se eliminan los gr?ficos y variables antiguas
 rm(list=ls())
 if(length(dev.list())!=0){
   dev.off(dev.list()["RStudioGD"])
@@ -69,18 +70,18 @@ df = read.csv(url,
 # Se eliminan los datos nulos del data-set
 df = df[!(df$bareNuclei == "?"),] 
 
-# Se convierten los datos a tipo numérico
+# Se convierten los datos a tipo num?rico
 df[ , ] = apply(df[ , ], 2,function(x) as.numeric(as.character(x)) )
 
-# Se elimina la columna id al no ser relevante para el análisis
+# Se elimina la columna id al no ser relevante para el an?lisis
 df$id<-NULL
 
-# Se cambian los valores de las clases por un String para una mejor visualización
+# Se cambian los valores de las clases por un String para una mejor visualizaci?n
 df$class <- as.character(df$class)
 df$class[df$class == "2"] <- "Benigno"
 df$class[df$class == "4"] <- "Maligno"
 
-# A continuación se procede a analizar posibles outliers en los datos
+# A continuaci?n se procede a analizar posibles outliers en los datos
 pruebas = df
 pruebas$id <- NULL
 pruebas$class<- NULL
@@ -88,15 +89,18 @@ pruebas$class<- NULL
 # Se conviernten los datos a tipo long para ser graficados
 datos.long<-melt(pruebas)
 
-# Se crea un gráfico de cajas
-bp1 <- ggboxplot(datos.long,
+# Se crea un gr?fico de cajas
+bp <- ggboxplot(datos.long,
                  x = "variable", 
                  y = "value",
                  fill = "variable")
 
-# Se muestra el gráfico
-print(bp1)
-
+# Se muestra el gr?fico
+print(bp)
+#Al parecer las operaciones necesarias para realizar estos graficos requieren de un
+#procesamiento extra por lo que paramos el codigo 1 segundo en estos tipos de 
+#grafico para quetenga un renderizado exitoso
+Sys.sleep(1)
 # Se Cambian los outliers encontrados por la media de la correspondiente variable
 df$marginalAdhesion[df$marginalAdhesion > 5] <- mean(df$marginalAdhesion)
 df$singleEpithCellSize[df$singleEpithCellSize > 4] <- mean(df$singleEpithCellSize)
@@ -112,31 +116,31 @@ pruebas$class<- NULL
 # Se convierten a tipo long los datos sin outliers
 datos.long2<-melt(pruebas)
 
-# Se crea un gráfico cuartil-cuartil para observar si se eliminaron correctamente
-# los valores atípicos
-qq2 <- ggqqplot(datos.long2,
+# Se crea un gr?fico cuartil-cuartil para observar si se eliminaron correctamente
+# los valores at?picos
+qq <- ggqqplot(datos.long2,
                 x = "value",
                 color = "variable")
-qq2 <- qq2 + facet_wrap(~ variable)
+qq <- qq + facet_wrap(~ variable)
 
-# Se muestra el gráfico
-print(qq2)
-
-# En adición, se crea un grafico de cajas nuevamente para observar los datos filtrados
-bp2 <- ggboxplot(datos.long2,
+# Se muestra el gr?fico
+print(qq)
+Sys.sleep(1)
+# En adici?n, se crea un grafico de cajas nuevamente para observar los datos filtrados
+bp <- ggboxplot(datos.long2,
                  x = "variable", y = "value",
                  fill = "variable")
 
-# Se muestra el gráfico
-print(bp2)
+# Se muestra el gr?fico
+print(bp)
 
-
+Sys.sleep(1)
 
 
 ######################################################################################################
-##########################     Medidas de Centralización   ###########################################
+##########################     Medidas de Centralizaci?n   ###########################################
 
-# Una vez que se realizó la limpieza de datos se proceden a calcular las siguientes métricas:
+# Una vez que se realiz? la limpieza de datos se proceden a calcular las siguientes m?tricas:
 
 # Se calcula la media para todas las variables
 medias = apply(pruebas, 2, mean)
@@ -147,7 +151,7 @@ medianas =  apply(pruebas, 2, median)
 # Se calcula la moda para todas la variables
 modas = apply(pruebas, 2, mlv,  method = "mfv")
 
-# se calcula la desviación estandar para todas las variables
+# se calcula la desviaci?n estandar para todas las variables
 desviaciones = apply(pruebas, 2, sd)
 
 # Se calcula la varianza para todas las variables
@@ -176,7 +180,7 @@ colnames(tabla) =  c("clumpThickness",
                      "normalNucleoli",
                      "mitoses")
 
-# Se le asignan los nombres de las métricas a las filas
+# Se le asignan los nombres de las m?tricas a las filas
 rownames(tabla) = c("media","mediana","moda","varianza","SD")
 
 # Se convierte la variable en una tabla
@@ -189,11 +193,11 @@ print(tabla)
 
 
 ######################################################################################################
-##########################       Distribución de Datos      ##########################################
+##########################       Distribuci?n de Datos      ##########################################
 
-# Por otro lado, se utiliza la función hist() para crear un histograma de los
-# datos de cada grupo. Esto se usa como primera aproximación para
-# observar si existe algún tipo de asimetría o si los datos se comportan
+# Por otro lado, se utiliza la funci?n hist() para crear un histograma de los
+# datos de cada grupo. Esto se usa como primera aproximaci?n para
+# observar si existe alg?n tipo de asimetr?a o si los datos se comportan
 # de forma normal.
 par(mfrow=c(3,3))
 ign<-mapply(hist,
@@ -203,13 +207,13 @@ ign<-mapply(hist,
             xlab="Puntaje")
 
 # Al graficar el histograma se puede observar que los grupos de datos no parecen
-# seguir distribuciones normales, y la mayoría de las variables pareciera tener 
-# un alto grado de asimetría negativa, es decir, los datos se 
+# seguir distribuciones normales, y la mayor?a de las variables pareciera tener 
+# un alto grado de asimetr?a negativa, es decir, los datos se 
 # concentran a la derecha. Sin embargo, para estar seguros utilizaremos un
 # Shapiro-Test, cuyas hipotesis a contrastar son las siguientes:
 
-# H0: La muestra proviene de una población cuya distribución es normal
-# HA: La muestra proviene de una población cuya distribución no es normal
+# H0: La muestra proviene de una poblaci?n cuya distribuci?n es normal
+# HA: La muestra proviene de una poblaci?n cuya distribuci?n no es normal
 
 # Se define un alfa = 0.05 para contrastar con el resultado obtenido
 
@@ -221,14 +225,14 @@ print(shapirotest)
 
 # Se puede ver que en cada una de las columnas el p-valor es menor a 0.05, 
 # por lo que se rechaza la hipotesis nula en todas las distribuciones. Esto
-# indica que las variables no siguen una distribución normal. Por lo que no
-# se puede aplicar en test ANOVA y se deberá optar por un test no paramétrico.
+# indica que las variables no siguen una distribuci?n normal. Por lo que no
+# se puede aplicar en test ANOVA y se deber? optar por un test no param?trico.
 
 
 
 
 ######################################################################################################
-##########################       Análisis por Clases        ##########################################
+##########################       An?lisis por Clases        ##########################################
 
 # Primero se suma la cantidad de observaciones que pertenecen a benigno y las que pertenecen a maligno
 B = sum(df$class == "Benigno",na.rm=TRUE)
@@ -242,18 +246,18 @@ PM= M/Tot
 # Se muestran los resultados
 cat("Totales:",Tot,"\nBenignos:",B,"Malignos:",M,"\nPorcentaje Benigno:",PB,"Porcentaje Maligno:",PM)
 
-# Se crea un gráfico para visualizar la distribución por clases.
+# Se crea un gr?fico para visualizar la distribuci?n por clases.
 valores <- c(PB, PM)
 etiquetas <- c("Benignos","Malignos")
 etiquetas <- paste(etiquetas,round(valores,2))
 etiquetas <- paste(etiquetas,"%",sep="")
 
-# Se muestra el gráfico
+# Se muestra el gr?fico
 par(mfrow=c(1,1))
 pie(valores, labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
 
-# Se crea una función para comparar cada variable con la clase de cancer
-# a la cual pertence la observación
+# Se crea una funci?n para comparar cada variable con la clase de cancer
+# a la cual pertence la observaci?n
 grafico <- function(df,aes,y_string){
                     boxplt =  ggboxplot(data = df, 
                                         x = "class", 
@@ -274,9 +278,9 @@ grafico <- function(df,aes,y_string){
                                                position = "right")
                     ggdraw(boxplt)
 
-                    }# Fin de la función
+                    }# Fin de la funci?n
 
-# Se llama a la función para crear los gráficos
+# Se llama a la funci?n para crear los gr?ficos
 a<-grafico(df,aes(x = clumpThickness, fill = class),"clumpThickness")
 b<-grafico(df,aes(x = uniformityCellSize, fill = class),"uniformityCellSize")
 c<-grafico(df,aes(x = uniformityCellShape, fill = class),"uniformityCellShape")
@@ -294,12 +298,12 @@ i
 
 
 ######################################################################################################
-##########################           Correlación            ##########################################
+##########################           Correlaci?n            ##########################################
 
-#Por ultimo, como se mencionó que las variables no siguen una distribución normal se decide
-# utiliza el test no paramétrico de Spearman para analizar la correlación de las variables
+#Por ultimo, como se mencion? que las variables no siguen una distribuci?n normal se decide
+# utiliza el test no param?trico de Spearman para analizar la correlaci?n de las variables
 
-# Se aplica el test de correlación
+# Se aplica el test de correlaci?n
 df.cor = cor(pruebas, method = 'spearman')
 
 # Se grafican los resultados
@@ -308,8 +312,8 @@ ggcorrplot(df.cor,hc.order = TRUE,type = "full",lab = TRUE)
 
 
 #######################################################################################################
-## Nota: en caso de tener error al mostrar los gráficos se debe expandir o agrandar la ventana       ##
-##       en donde se muestran los gráficos. En caso de que el grafico este en blanco hacer lo mismo. ##
+## Nota: en caso de tener error al mostrar los gr?ficos se debe expandir o agrandar la ventana       ##
+##       en donde se muestran los gr?ficos. En caso de que el grafico este en blanco hacer lo mismo. ##
 #######################################################################################################
 
 # Fin del script
