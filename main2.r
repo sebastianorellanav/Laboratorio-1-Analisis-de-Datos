@@ -161,8 +161,7 @@ tabla = matrix(c(medias,
                  medianas,
                  modas,
                  varianzas,
-                 desviaciones, 
-                 rangos),
+                 desviaciones),
                ncol=9,
                byrow=TRUE)
 
@@ -196,7 +195,12 @@ print(tabla)
 # datos de cada grupo. Esto se usa como primera aproximación para
 # observar si existe algún tipo de asimetría o si los datos se comportan
 # de forma normal.
-ign<-mapply(hist,pruebas,main=colnames(pruebas),col="lightsteelblue",xlab="Puntaje")
+par(mfrow=c(3,3))
+ign<-mapply(hist,
+            pruebas,
+            main=colnames(pruebas),
+            col="lightsteelblue",
+            xlab="Puntaje")
 
 # Al graficar el histograma se puede observar que los grupos de datos no parecen
 # seguir distribuciones normales, y la mayoría de las variables pareciera tener 
@@ -214,8 +218,6 @@ shapirotest <- apply(pruebas,2,shapiro.test)
 
 # Se muestra el resultado del test
 print(shapirotest)
-
-par(mfrow=c(3,3))  #PARA QUE ES ESTO?
 
 # Se puede ver que en cada una de las columnas el p-valor es menor a 0.05, 
 # por lo que se rechaza la hipotesis nula en todas las distribuciones. Esto
@@ -247,29 +249,34 @@ etiquetas <- paste(etiquetas,round(valores,2))
 etiquetas <- paste(etiquetas,"%",sep="")
 
 # Se muestra el gráfico
+par(mfrow=c(1,1))
 pie(valores, labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
 
-
-
-#se realiza una prueba de spearman
-df.cor = cor(pruebas, method = 'spearman')
-#Para luego realizar un grafico de calor con la matriz de correlacion
-ggcorrplot(df.cor,hc.order = TRUE,type = "full",lab = TRUE)
-
-
-
-
-
-#Se define una funciÃ³n para comparar cada variable con la clase de cancer que se tiene (benigno o maligno)
+# Se crea una función para comparar cada variable con la clase de cancer
+# a la cual pertence la observación
 grafico <- function(df,aes,y_string){
-  boxplt =  ggboxplot(data = df, x = "class", y = y_string, color = "class",) + border()
+                    boxplt =  ggboxplot(data = df, 
+                                        x = "class", 
+                                        y = y_string, 
+                                        color = "class",) + border()
+                    
+                    ydens = axis_canvas(boxplt, 
+                                        axis = "y", 
+                                        coord_flip = TRUE) + 
+                                        geom_density(data = df, 
+                                        aes, alpha = 0.7, 
+                                        size = 0.2) + 
+                                        coord_flip()
+  
+                    boxplt = insert_yaxis_grob(boxplt, 
+                                               ydens, 
+                                               grid::unit(.2, "null"), 
+                                               position = "right")
+                    ggdraw(boxplt)
 
-  ydens = axis_canvas(boxplt, axis = "y", coord_flip = TRUE) + geom_density(data = df, aes, alpha = 0.7, size = 0.2) + coord_flip()
+                    }# Fin de la función
 
-  boxplt = insert_yaxis_grob(boxplt, ydens, grid::unit(.2, "null"), position = "right")
-  ggdraw(boxplt)
-}
-#y se llama para cada columna
+# Se llama a la función para crear los gráficos
 a<-grafico(df,aes(x = clumpThickness, fill = class),"clumpThickness")
 b<-grafico(df,aes(x = uniformityCellSize, fill = class),"uniformityCellSize")
 c<-grafico(df,aes(x = uniformityCellShape, fill = class),"uniformityCellShape")
@@ -286,17 +293,23 @@ i
 
 
 
+######################################################################################################
+##########################           Correlación            ##########################################
+
+#Por ultimo, como se mencionó que las variables no siguen una distribución normal se decide
+# utiliza el test no paramétrico de Spearman para analizar la correlación de las variables
+
+# Se aplica el test de correlación
+df.cor = cor(pruebas, method = 'spearman')
+
+# Se grafican los resultados
+ggcorrplot(df.cor,hc.order = TRUE,type = "full",lab = TRUE)
 
 
 
+#####################################################################################################
+## Nota: en caso de tener error al mostrar los gráficos se debe expandir o agrandar la ventana     ##
+##       en donde se muestran los gráficos.                                                        ##
+#####################################################################################################
 
-
-
-
-
-
-
-
-
-
-
+# Fin del script
