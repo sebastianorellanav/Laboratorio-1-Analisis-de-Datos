@@ -192,18 +192,64 @@ print(tabla)
 ######################################################################################################
 ##########################       Distribución de Datos      ##########################################
 
-#Se verifica si las variables siguen una distribuciÃ³n normal mediante shapiro test y un alfa estandar de 0.05
-#hipotesis nula
-#Los datos siguen una distribucion normal
-#hipostesis alternativa
-#Los datos no siguen una distribucion normal
-
-distribucion <- apply(pruebas,2,shapiro.test)
-par(mfrow=c(3,3))
-#en cada uno de las columnas el p-valor es menor a 0.05, por lo que rechazamos en todas
-#Para verificar se revisara el histograma de cada columna (En caso de error, agrandar la seccion de graficos)
+# Por otro lado, se utiliza la función hist() para crear un histograma de los
+# datos de cada grupo. Esto se usa como primera aproximación para
+# observar si existe algún tipo de asimetría o si los datos se comportan
+# de forma normal.
 ign<-mapply(hist,pruebas,main=colnames(pruebas),col="lightsteelblue",xlab="Puntaje")
-#Efectivamente, Ninguna sigue una distribuiciÃ³n normal, por lo que se opta por un test no paramÃ©trico
+
+# Al graficar el histograma se puede observar que los grupos de datos no parecen
+# seguir distribuciones normales, y la mayoría de las variables pareciera tener 
+# un alto grado de asimetría negativa, es decir, los datos se 
+# concentran a la derecha. Sin embargo, para estar seguros utilizaremos un
+# Shapiro-Test, cuyas hipotesis a contrastar son las siguientes:
+
+# H0: La muestra proviene de una población cuya distribución es normal
+# HA: La muestra proviene de una población cuya distribución no es normal
+
+# Se define un alfa = 0.05 para contrastar con el resultado obtenido
+
+# Se aplica el test a todas las variables
+shapirotest <- apply(pruebas,2,shapiro.test)
+
+# Se muestra el resultado del test
+print(shapirotest)
+
+par(mfrow=c(3,3))  #PARA QUE ES ESTO?
+
+# Se puede ver que en cada una de las columnas el p-valor es menor a 0.05, 
+# por lo que se rechaza la hipotesis nula en todas las distribuciones. Esto
+# indica que las variables no siguen una distribución normal. Por lo que no
+# se puede aplicar en test ANOVA y se deberá optar por un test no paramétrico.
+
+
+
+
+######################################################################################################
+##########################       Análisis por Clases        ##########################################
+
+# Primero se suma la cantidad de observaciones que pertenecen a benigno y las que pertenecen a maligno
+B = sum(df$class == "Benigno",na.rm=TRUE)
+M = sum(df$class == "Maligno",na.rm=TRUE)
+
+# Se calculan los porcentajes de cada clase
+Tot = B+M
+PB= B/Tot
+PM= M/Tot
+
+# Se muestran los resultados
+cat("Totales:",Tot,"\nBenignos:",B,"Malignos:",M,"\nPorcentaje Benigno:",PB,"Porcentaje Maligno:",PM)
+
+# Se crea un gráfico para visualizar la distribución por clases.
+valores <- c(PB, PM)
+etiquetas <- c("Benignos","Malignos")
+etiquetas <- paste(etiquetas,round(valores,2))
+etiquetas <- paste(etiquetas,"%",sep="")
+
+# Se muestra el gráfico
+pie(valores, labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
+
+
 
 #se realiza una prueba de spearman
 df.cor = cor(pruebas, method = 'spearman')
@@ -211,19 +257,7 @@ df.cor = cor(pruebas, method = 'spearman')
 ggcorrplot(df.cor,hc.order = TRUE,type = "full",lab = TRUE)
 
 
-#Aqui estarÃ¡ la cantidad de datos que se trabajarÃ¡
-B = sum(df$class == "Benigno",na.rm=TRUE)
-M = sum(df$class == "Maligno",na.rm=TRUE)
-Tot = B+M
-PB= B/Tot
-PM= M/Tot
-cat("Totales:",Tot,"\nBenignos:",B,"Malignos:",M,"\nPorcentaje Benigno:",PB,"Porcentaje Maligno:",PM)
-#GRAFICO CIRCULAR para revisar la distribucion de estos
-valores <- c(PB, PM)
-etiquetas <- c("Benignos","Malignos")
-etiquetas <- paste(etiquetas,round(valores,2))
-etiquetas <- paste(etiquetas,"%",sep="")
-pie(valores, ,labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
+
 
 
 #Se define una funciÃ³n para comparar cada variable con la clase de cancer que se tiene (benigno o maligno)
