@@ -22,6 +22,9 @@ if(length(dev.list())!=0){
   dev.off(dev.list()["RStudioGD"])
 }
 
+
+
+
 ######################################################################################################
 ##########################            Data-set             ###########################################
 
@@ -56,6 +59,9 @@ df = read.csv(url,
               header = F, 
               sep=",", 
               col.names = columnas)
+
+
+
 
 ######################################################################################################
 ##########################        Limpieza de Datos        ###########################################
@@ -103,41 +109,88 @@ pruebas = df
 pruebas$id <- NULL
 pruebas$class<- NULL
 
+# Se convierten a tipo long los datos sin outliers
 datos.long2<-melt(pruebas)
-qq2 <- ggqqplot(
-  datos.long2,
-  x = "value",
-  color = "variable"
-)
+
+# Se crea un gráfico cuartil-cuartil para observar si se eliminaron correctamente
+# los valores atípicos
+qq2 <- ggqqplot(datos.long2,
+                x = "value",
+                color = "variable")
 qq2 <- qq2 + facet_wrap(~ variable)
+
+# Se muestra el gráfico
 print(qq2)
 
-bp2 <- ggboxplot(
-  datos.long2,
-  x = "variable", y = "value",
-  fill = "variable"
-)
+# En adición, se crea un grafico de cajas nuevamente para observar los datos filtrados
+bp2 <- ggboxplot(datos.long2,
+                 x = "variable", y = "value",
+                 fill = "variable")
+
+# Se muestra el gráfico
 print(bp2)
 
-#Ahora con los datos limpios calculamos lo siguiente
+
+
+
+######################################################################################################
+##########################     Medidas de Centralización   ###########################################
+
+# Una vez que se realizó la limpieza de datos se proceden a calcular las siguientes métricas:
+
+# Se calcula la media para todas las variables
 medias = apply(pruebas, 2, mean)
+
+# Se calcula la mediana para todas las variables
 medianas =  apply(pruebas, 2, median)
+
+# Se calcula la moda para todas la variables
 modas = apply(pruebas, 2, mlv,  method = "mfv")
+
+# se calcula la desviación estandar para todas las variables
 desviaciones = apply(pruebas, 2, sd)
+
+# Se calcula la varianza para todas las variables
 varianzas = apply(pruebas, 2, var)
+
+# Se calcula el rango de cada una de las variables
 rangos = apply(pruebas, 2, range)
 
-#Se crea una tabla para mostrar todo
-tabla = matrix(c(medias,medianas,modas,varianzas,desviaciones),ncol=9,byrow=TRUE)
-#Se le asigna nombre a las columnas
-colnames(tabla) =  c("clumpThickness","uniformityCellSize","uniformityCellShape","marginalAdhesion","singleEpithCellSize","bareNuclei","blandChromatin","normalNucleoli","mitoses")
-#y a las filas
+# Se crea una tabla para mostrar los resultados
+tabla = matrix(c(medias,
+                 medianas,
+                 modas,
+                 varianzas,
+                 desviaciones, 
+                 rangos),
+               ncol=9,
+               byrow=TRUE)
+
+# Se le asignan los nombres de las variables a las columnas
+colnames(tabla) =  c("clumpThickness",
+                     "uniformityCellSize",
+                     "uniformityCellShape",
+                     "marginalAdhesion",
+                     "singleEpithCellSize",
+                     "bareNuclei",
+                     "blandChromatin",
+                     "normalNucleoli",
+                     "mitoses")
+
+# Se le asignan los nombres de las métricas a las filas
 rownames(tabla) = c("media","mediana","moda","varianza","SD")
-#Finalmente se convierte a tabla y se muestra
+
+# Se convierte la variable en una tabla
 tabla=as.table(tabla)
+
+# Se muestran los resultados
 print(tabla)
 
 
+
+
+######################################################################################################
+##########################       Distribución de Datos      ##########################################
 
 #Se verifica si las variables siguen una distribuciÃ³n normal mediante shapiro test y un alfa estandar de 0.05
 #hipotesis nula
