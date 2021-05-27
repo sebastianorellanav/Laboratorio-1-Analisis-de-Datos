@@ -1,4 +1,13 @@
-#main v2
+######################################################################################################
+###########################    Laboratorio 1 - Análisis de Datos    ##################################
+######################################################################################################
+###########################    Autores:     Gary Simken             ##################################
+###########################                 Sebastián Orellana      ##################################
+###########################    Fecha:       27 - Mayo - 2021        ##################################
+######################################################################################################
+
+######################################################################################################
+##########################            Bibliotecas          ###########################################
 library(modeest)
 library(ggpubr)
 library(cowplot)
@@ -7,10 +16,14 @@ library(ggcorrplot)
 library(reshape2)
 library(RColorBrewer)
 
+# Se eliminan los gráficos y variables antiguas
 rm(list=ls())
 if(length(dev.list())!=0){
   dev.off(dev.list()["RStudioGD"])
 }
+
+######################################################################################################
+##########################            Data-set             ###########################################
 
 #1. Sample code number: id number
 #2. Clump Thickness: 1 - 10             CT
@@ -24,7 +37,7 @@ if(length(dev.list())!=0){
 #10. Mitoses: 1 - 10                    M
 #11. Class: (2 for benign, 4 for malignant) C
 
-#Se definen los nombres de las columnas, estos son los mismos de provistos por la base de datos
+# Se definen los nombres de las columnas, estos son los mismos de provistos por la base de datos
 columnas = c("id",
              "clumpThickness",
              "uniformityCellSize",
@@ -37,43 +50,55 @@ columnas = c("id",
              "mitoses",
              "class"
 )
-#mediante el url se importan los datos
+# Se importa la base de dato mediante la url del repositorio UCI Machine Learning
 url = "https://archive.ics.uci.edu/ml/machine-learning-databases/breast-cancer-wisconsin/breast-cancer-wisconsin.data"
-df = read.csv(url, header = F, sep=",", col.names = columnas)
+df = read.csv(url, 
+              header = F, 
+              sep=",", 
+              col.names = columnas)
 
+######################################################################################################
+##########################        Limpieza de Datos        ###########################################
 
-#Se sacan los datos nulos del datagrama
-df=df[!(df$bareNuclei == "?"),] #SN= sin nulos
-#Se conbvierten todos a numericos
+# Se eliminan los datos nulos del data-set
+df = df[!(df$bareNuclei == "?"),] 
+
+# Se convierten los datos a tipo numérico
 df[ , ] = apply(df[ , ], 2,function(x) as.numeric(as.character(x)) )
 
-#Para nalizar Outalier, primero se graficaran los datos obtenidos
-#Se elimina la columna id
+# Se elimina la columna id al no ser relevante para el análisis
 df$id<-NULL
-#Se convierte los enteros en clases para un mayor
+
+# Se cambian los valores de las clases por un String para una mejor visualización
 df$class <- as.character(df$class)
 df$class[df$class == "2"] <- "Benigno"
 df$class[df$class == "4"] <- "Maligno"
 
-
-
+# A continuación se procede a analizar posibles outliers en los datos
 pruebas = df
 pruebas$id <- NULL
 pruebas$class<- NULL
+
+# Se conviernten los datos a tipo long para ser graficados
 datos.long<-melt(pruebas)
-bp1 <- ggboxplot(
-  datos.long,
-  x = "variable", y = "value",
-  fill = "variable"
-)
+
+# Se crea un gráfico de cajas
+bp1 <- ggboxplot(datos.long,
+                 x = "variable", 
+                 y = "value",
+                 fill = "variable")
+
+# Se muestra el gráfico
 print(bp1)
 
+# Se Cambian los outliers encontrados por la media de la correspondiente variable
 df$marginalAdhesion[df$marginalAdhesion > 5] <- mean(df$marginalAdhesion)
 df$singleEpithCellSize[df$singleEpithCellSize > 4] <- mean(df$singleEpithCellSize)
 df$blandChromatin[df$blandChromatin > 4] <- mean(df$blandChromatin)
 df$normalNucleoli[df$normalNucleoli > 5] <- mean(df$normalNucleoli)
 df$mitoses[df$mitoses > 2] <- mean(df$mitoses)
 
+# Se elimina el id y la clase para seguir analizando las variables por separado
 pruebas = df
 pruebas$id <- NULL
 pruebas$class<- NULL
