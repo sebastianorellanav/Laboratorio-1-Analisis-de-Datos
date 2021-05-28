@@ -1,5 +1,5 @@
 ######################################################################################################
-###########################    Laboratorio 1 - An?lisis de Datos    ##################################
+###########################    Laboratorio 1 - Analisis de Datos    ##################################
 ######################################################################################################
 ###########################    Autores:     Gary Simken             ##################################
 ###########################                 Sebasti?n Orellana      ##################################
@@ -17,7 +17,7 @@ library(reshape2)
 library(RColorBrewer)
 
 
-# Se eliminan los gr?ficos y variables antiguas
+# Se eliminan los graficos y variables antiguas
 rm(list=ls())
 if(length(dev.list())!=0){
   dev.off(dev.list()["RStudioGD"])
@@ -70,7 +70,7 @@ df = read.csv(url,
 # Se eliminan los datos nulos del data-set
 df = df[!(df$bareNuclei == "?"),] 
 
-# Se convierten los datos a tipo num?rico
+# Se convierten los datos a tipo numerico
 df[ , ] = apply(df[ , ], 2,function(x) as.numeric(as.character(x)) )
 
 # Se elimina la columna id al no ser relevante para el an?lisis
@@ -254,7 +254,9 @@ etiquetas <- paste(etiquetas,"%",sep="")
 
 # Se muestra el gr?fico
 par(mfrow=c(1,1))
-pie(valores, labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
+grafico_clases <- pie(valores, labels = etiquetas,col=rainbow(2), main="% Casos Benignos vs Malignos")
+
+print(grafico_clases)
 
 # Se crea una funci?n para comparar cada variable con la clase de cancer
 # a la cual pertence la observaci?n
