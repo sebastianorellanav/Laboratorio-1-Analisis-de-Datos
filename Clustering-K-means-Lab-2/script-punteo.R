@@ -177,6 +177,21 @@ df.scale=scale(df)
 #Para realizar el clustering buscaremos las distancias entre los datos
 dist.eucl = dist(df.scale, method = "euclidean")
 a<-fviz_dist(dist.eucl)
-b<-fviz_nbclust(df.scale, kmeans, method = "silhouette")
 print(a)
+b<-fviz_nbclust(df.scale, kmeans, method = "silhouette")+labs(subtitle = "Metodo de siluetas")
 print(b)
+b<-fviz_nbclust(df.scale, kmeans, method = "wss")+labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
+print(b)
+#Podemos ver el codo marcado en x =2 por lo que colocamos una linea en el para notarlo
+
+b<-fviz_nbclust(df.scale, kmeans, method = "gap_stat",iter.max=50)+labs(subtitle = "gap stadistict method")
+print(b)
+
+#Tenemos que 2 de los 3 metodos nos arrojan un k optimo = 2 por lo que podemos decir que este sera nuestro k
+#finalmente podemos graficarlos
+km.res = kmeans(df.scale, 2, nstart = 25)
+cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster)
+
+
+#Segun los resultados obtenidos obtenidos obtenemos que el k obtimo en este caso es 2
