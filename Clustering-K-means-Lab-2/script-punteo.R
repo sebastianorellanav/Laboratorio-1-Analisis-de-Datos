@@ -88,8 +88,6 @@ df[ , ] = apply(df[ , ], 2,function(x) as.numeric(as.character(x)) )
 #Para poder tratar estos datos se utilizara el metodo basado en Random Forest 
 
 forestImp <- missForest(df)
-summary(forestImp)
-
 # Valores imputados
 df.forestImp <- forestImp$ximp
 df.forestImp$bareNuclei <- round(df.forestImp$bareNuclei)
@@ -143,7 +141,7 @@ par(mfrow=c(3,3))
 ign<-mapply(hist,
             df,
             main=colnames(df),
-            col="lightsteelblue",
+            col="coral2",
             xlab="Puntaje")
 
 # Al graficar el histograma se puede observar que los grupos de datos no parecen
@@ -174,24 +172,87 @@ print(shapirotest)
 #para realizar clustering, es necesario escalar los datos. Esto debido a que se est?? ocupando una misma "regla" en las mediciones.
 df.scale=scale(df)
 
+#Comparaci??n entre los datos antes de scalarlos y despues
+datos.long=melt(df)
+qq <- ggqqplot(datos.long,
+               x = "value",
+               color = "variable")
+qq <- qq + facet_wrap(~ variable)
+
+print(qq)
+
+datos.long=melt(df.scale)
+qq <- ggqqplot(datos.long,
+               x = "value",
+               color = "Var2")
+qq <- qq + facet_wrap(~ Var2)
+
+print(qq)
+
+
 #Para realizar el clustering buscaremos las distancias entre los datos
-dist.eucl = dist(df.scale, method = "euclidean")
-a<-fviz_dist(dist.eucl)
-print(a)
-b<-fviz_nbclust(df.scale, kmeans, method = "silhouette")+labs(subtitle = "Metodo de siluetas")
-print(b)
-b<-fviz_nbclust(df.scale, kmeans, method = "wss")+labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
-print(b)
+
+#Se calculan distintas distancias para compararlas
+dist.eucl <- daisy(df.scale, metric = "euclidean", stand = FALSE)
+dist.gower <- daisy(df.scale, metric = "gower", stand = FALSE)
+dist.manhattan <- daisy(df.scale, metric = "manhattan", stand = FALSE)
+
+#Se gr??fican las distancias
+plot.eucl<-fviz_dist(dist.eucl,gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+print(plot.eucl)
+
+plot.gower<-fviz_dist(dist.gower,gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+print(plot.gower)
+
+plot.manhattan<-fviz_dist(dist.manhattan,gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+print(plot.manhattan)
+
+
+
+dist.matrix=as.matrix(dist.eucl)
+
+#Buscando el k optimo
+
+silhouette<-fviz_nbclust(dist.matrix, kmeans, method = "silhouette")+labs(subtitle = "Metodo de siluetas")
+print(silhouette)
+wss<-fviz_nbclust(dist.matrix, kmeans, method = "wss")+labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
+print(wss)
 #Podemos ver el codo marcado en x =2 por lo que colocamos una linea en el para notarlo
 
-b<-fviz_nbclust(df.scale, kmeans, method = "gap_stat",iter.max=50)+labs(subtitle = "gap stadistict method")
-print(b)
+gap_stat<-fviz_nbclust(dist.matrix, kmeans, method = "gap_stat",iter.max=20)+labs(subtitle = "gap stadistict method")
+print(gap_stat)
 
 #Tenemos que 2 de los 3 metodos nos arrojan un k optimo = 2 por lo que podemos decir que este sera nuestro k
 #finalmente podemos graficarlos
-km.res = kmeans(df.scale, 2, nstart = 25)
+km.res = kmeans(dist.matrix, 2, nstart = 25)
 cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
 print(cluster)
+
+km.res = kmeans(dist.matrix, 3, nstart = 25)
+cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster)
+
+km.res = kmeans(dist.matrix, 4, nstart = 25)
+cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster)
+
+km.res = kmeans(dist.matrix, 6, nstart = 25)
+cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster)
+
+
+
+# km.res = kmeans(df.scale, 2, nstart = 25)
+# cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+# print(cluster)
+# 
+# km.res = kmeans(df.scale, 3, nstart = 25)
+# cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+# print(cluster)
+# 
+# km.res = kmeans(df.scale, 4, nstart = 25)
+# cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+# print(cluster)
 
 
 #Segun los resultados obtenidos obtenidos obtenemos que el k obtimo en este caso es 2
