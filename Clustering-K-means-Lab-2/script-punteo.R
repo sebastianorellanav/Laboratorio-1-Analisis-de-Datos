@@ -174,11 +174,6 @@ print(shapirotest)
 #para realizar clustering, es necesario escalar los datos. Esto debido a que se est?? ocupando una misma "regla" en las mediciones.
 df.scale=scale(df)
 
-res.nbclust <- NbClust(df.scale, distance = "euclidean",
-                       min.nc = 2, max.nc = 9, 
-                       method = "complete", index ="all")
-factoextra::fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("NbClust's optimal number of clusters")
-
 #Comparaci??n entre los datos antes de scalarlos y despues
 datos.long=melt(df)
 qq <- ggqqplot(datos.long,
@@ -216,38 +211,50 @@ print(plot.manhattan)
 
 
 
-dist.matrix=as.matrix(dist.eucl)
+#dist.matrix=as.matrix(dist.eucl)
 
 #Buscando el k optimo
 
-silhouette<-fviz_nbclust(dist.matrix, kmeans, method = "silhouette")+labs(subtitle = "Metodo de siluetas")
+silhouette<-fviz_nbclust(df.scale, kmeans, method = "silhouette")+labs(subtitle = "Metodo de siluetas")
 print(silhouette)
-wss<-fviz_nbclust(dist.matrix, kmeans, method = "wss")+labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
+wss<-fviz_nbclust(df.scale, kmeans, method = "wss")+labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
 print(wss)
 #Podemos ver el codo marcado en x =2 por lo que colocamos una linea en el para notarlo
 
-gap_stat<-fviz_nbclust(dist.matrix, kmeans, method = "gap_stat",iter.max=20)+labs(subtitle = "gap stadistict method")
+gap_stat<-fviz_nbclust(df.scale, kmeans, method = "gap_stat",iter.max=20)+labs(subtitle = "gap stadistict method")
 print(gap_stat)
+
+# Se utiliza la función nbClust que utiliza diferentes métodos para analizar el número óptimo de clusters
+res.nbclust <- NbClust(df.scale, distance = "euclidean",
+                       min.nc = 2, max.nc = 9, 
+                       method = "complete", index ="all")
+factoextra::fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("NbClust's optimal number of clusters")
+
 
 #Tenemos que 2 de los 3 metodos nos arrojan un k optimo = 2 por lo que podemos decir que este sera nuestro k
 #finalmente podemos graficarlos
-km.res = kmeans(dist.matrix, 2, nstart = 25)
-cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-print(cluster)
+km.res = kmeans(df.scale, 2, nstart = 25)
+cluster_k2<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster_k2)
 
-km.res = kmeans(dist.matrix, 3, nstart = 25)
-cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-print(cluster)
+km.res = kmeans(df.scale, 3, nstart = 25)
+cluster_k3-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster_k3)
 
-km.res = kmeans(dist.matrix, 4, nstart = 25)
-cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-print(cluster)
+km.res = kmeans(df.scale, 4, nstart = 25)
+cluster_k4<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster_k4)
 
-km.res = kmeans(dist.matrix, 6, nstart = 25)
-cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-print(cluster)
+km.res = kmeans(df.scale, 6, nstart = 25)
+cluster_k6<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+print(cluster_k6)
+
+ggarrange(cluster_k2, cluster_k3, cluster_k4, cluster_k6, nrow = 2, ncol = 2)
 
 
+#km.res2 <- eclust(df.scale,FUNcluster="kmeans", k=4,hc_metric = "pearson")
+#cluster2<-fviz_cluster(km.res2, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+#print(cluster2)
 
 # km.res = kmeans(df.scale, 2, nstart = 25)
 # cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
