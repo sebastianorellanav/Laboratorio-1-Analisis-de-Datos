@@ -1,9 +1,9 @@
 ######################################################################################################
-###########################    Laboratorio 1 - Analisis de Datos    ##################################
+###########################    Laboratorio 2 - Analisis de Datos    ##################################
 ######################################################################################################
 ###########################    Autores:     Gary Simken             ##################################
 ###########################                 Sebasti?n Orellana      ##################################
-###########################    Fecha:       27 - Mayo - 2021        ##################################
+###########################    Fecha:       18 - Junio - 2021       ##################################
 ######################################################################################################
 
 ######################################################################################################
@@ -20,7 +20,7 @@ library(factoextra)
 library(cluster)
 library(NbClust)
 
-# Se eliminan los graficos y variables antiguas
+# Se limpia el ambiente de variables y los gráficos antiguos
 rm(list=ls())
 if(length(dev.list())!=0){
   dev.off(dev.list()["RStudioGD"])
@@ -64,50 +64,55 @@ df = read.csv(url,
               sep=",", 
               col.names = columnas)
 
-
-
+# Se setea una semilla para las funciones que necesites utilizar nnumeros aleatorios
 set.seed(1234)
+
+
+
+
 ######################################################################################################
 ##########################        Limpieza de Datos        ###########################################
 
-# Se eliminar??n las variables de clase e id, dado que son datos no relevantes en esta parte del estudio,
-# en el caso de id es un simple identificador por lo que no aporta y en el caso de 
-# clase, esta es eliminada porque el Clustering es un m??todo no supervisado.
+# Se eliminan las variables if y class, dado que son datos no relevantes en esta parte del estudio,
+# en el caso de id es un simple identificador por lo que no aporta y en el caso de clase, esta es 
+# eliminada porque el Clustering es un m??todo no supervisado.
 df <- subset(df, select = -c(id))
 df.inicial<-df
 df <- subset(df, select = -c(class))
 
-#Para un vistaso previo aplicaremos un summary
+# Resumen de los cuartiles de cada variable
 summary(df)
 
-# Para los datos "missing" se proceder?? a cambiar estos por un NA que es el valor default en los enteros cuando no
-# existe un dato
+# Para los datos "missing" se procede a cambiar los signos de interrogación por un NA, que es el valor
+# default en los enteros cuando no existe un dato
 df$bareNuclei[df$bareNuclei == "?"] = NA
 
-# Por otro lado convertiremos todos los datos a numericos para poder trabajarlos como tal
+# Por otro lado convertiremos todos los datos a tipo numerico para que no existan problemas al 
+# momento de analizarlos
 df[ , ] = apply(df[ , ], 2,function(x) as.numeric(as.character(x)) )
 
-#Para poder tratar estos datos se utilizara el metodo basado en Random Forest 
-
+# Para reemplazar los valores nulos por datos que aporten al data-set se utiliza el metodo
+# RandomForest
 forestImp <- missForest(df)
+
 # Valores imputados
 df.forestImp <- forestImp$ximp
 df.forestImp$bareNuclei <- round(df.forestImp$bareNuclei)
 
-#Ahora con todos los valores 
+# Se guardan los nuevos datos
 df<- df.forestImp
 
-#para revisar los Valores outliers graficaremos en caja los datos
-# Se conviernten los datos a tipo long para ser graficados
+# Se procede a realizar un grafico de cajas por cada variable para identificar los posibles
+# ouliers que puedan existir. Para esto se conviernten los datos a tipo long para ser graficados
 datos.long<-melt(df)
 
-# Se crea un gr?fico de cajas
+# Se crea un grafico de cajas
 bp <- ggboxplot(datos.long,
                 x = "variable", 
                 y = "value",
                 fill = "variable")
 
-# Se muestra el gr?fico
+# Se muestra el grafico
 print(bp)
 
 # Se Cambian los outliers encontrados por la media de la correspondiente variable
@@ -120,153 +125,220 @@ df$mitoses[df$mitoses > 2] <- mean(df$mitoses)
 # Se conviernten los datos a tipo long para ser graficados
 datos.long<-melt(df)
 
-# Se crea un gr?fico de cajas
+# Se crea un grafico de cajas
 bp <- ggboxplot(datos.long,
                 x = "variable", 
                 y = "value",
                 fill = "variable")
 
-# Se muestra el gr?fico
+# Se muestra el grafico
 print(bp)
 
-#Con esto se concluye la trata de datos, deshaciendonos de outliers y valores nulos
+# Con esto se concluye la limpieza y preprocesamiento de los datos, deshaciendonos de outliers y
+# valores nulos
 
 
-######################################################################################################
-##########################       Distribuci?n de Datos      ##########################################
 
-# Por otro lado, se utiliza la funci?n hist() para crear un histograma de los
-# datos de cada grupo. Esto se usa como primera aproximaci?n para
-# observar si existe alg?n tipo de asimetr?a o si los datos se comportan
-# de forma normal.
-par(mfrow=c(3,3))
-ign<-mapply(hist,
-            df,
-            main=colnames(df),
-            col="coral2",
-            xlab="Puntaje")
 
-# Al graficar el histograma se puede observar que los grupos de datos no parecen
-# seguir distribuciones normales, y la mayor?a de las variables pareciera tener 
-# un alto grado de asimetr?a negativa, es decir, los datos se 
-# concentran a la derecha. Sin embargo, para estar seguros utilizaremos un
-# Shapiro-Test, cuyas hipotesis a contrastar son las siguientes:
 
-# H0: La muestra proviene de una poblaci?n cuya distribuci?n es normal
-# HA: La muestra proviene de una poblaci?n cuya distribuci?n no es normal
+########################################################################################################
+####################################       Estandarización         ####################################
 
-# Se define un alfa = 0.05 para contrastar con el resultado obtenido
-
-# Se aplica el test a todas las variables
-shapirotest <- apply(df,2,shapiro.test)
-
-# Se muestra el resultado del test
-print(shapirotest)
-
-# Se puede ver que en cada una de las columnas el p-valor es menor a 0.05, 
-# por lo que se rechaza la hipotesis nula en todas las distribuciones. Esto
-# indica que las variables no siguen una distribuci?n normal. Por lo que no
-# se puede aplicar en test ANOVA y se deber? optar por un test no param?trico.
-
-#############################################################################
-########################Normalizacion
-
-#para realizar clustering, es necesario escalar los datos. Esto debido a que se est?? ocupando una misma "regla" en las mediciones.
+# Antes de realizar el proceso de clustering, es necesario escalar los datos. Esto debido a que se 
+# ocupa una misma "regla" para las mediciones.
 df.scale=scale(df)
 
-#Comparaci??n entre los datos antes de scalarlos y despues
+# Comparacion entre los datos antes y después de realizar el escalamiento
+# Se comvierten los datos a tipo long para graficarlos
 datos.long=melt(df)
+
+# Se crea un grafico cuartil-cuartil
 qq <- ggqqplot(datos.long,
                x = "value",
-               color = "variable")
-qq <- qq + facet_wrap(~ variable)
+               color = "variable") + facet_wrap(~ variable)
 
+# Se muestra el grafico
 print(qq)
 
+# Se comvierten los datos escalados a tipo long para graficarlos
 datos.long=melt(df.scale)
+
+# Se crea un grafico cuartil cuartil con los datos escalados
 qq <- ggqqplot(datos.long,
                x = "value",
-               color = "Var2")
-qq <- qq + facet_wrap(~ Var2)
+               color = "Var2") + facet_wrap(~ Var2)
 
+# Se muestra el gráfico
 print(qq)
 
 
-#Para realizar el clustering buscaremos las distancias entre los datos
 
+
+########################################################################################################
+#################################       Medidas de Distancia         ##################################
+
+#Para realizar el clustering se analizan las distancias entre los datos
 #Se calculan distintas distancias para compararlas
-dist.eucl <- daisy(df.scale, metric = "euclidean", stand = FALSE)
-dist.gower <- daisy(df.scale, metric = "gower", stand = FALSE)
-dist.manhattan <- daisy(df.scale, metric = "manhattan", stand = FALSE)
 
-#Se gr??fican las distancias
-plot.eucl<-fviz_dist(dist.eucl,gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+# Distancia Euclídea
+dist.eucl <- daisy(df.scale, 
+                   metric = "euclidean", 
+                   stand = FALSE)
+
+# Distancia de Gower
+dist.gower <- daisy(df.scale, 
+                    metric = "gower", 
+                    stand = FALSE)
+
+# Distancia de Manhattan
+dist.manhattan <- daisy(df.scale, 
+                        metric = "manhattan", 
+                        stand = FALSE)
+
+#Se grafican las distancias
+plot.eucl<-fviz_dist(dist.eucl,
+                     gradient = list(low = "#00AFBB", 
+                                     mid = "white", 
+                                     high = "#FC4E07"))
 print(plot.eucl)
 
-plot.gower<-fviz_dist(dist.gower,gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+plot.gower<-fviz_dist(dist.gower,
+                      gradient = list(low = "#00AFBB", 
+                                      mid = "white", 
+                                      high = "#FC4E07"))
 print(plot.gower)
 
-plot.manhattan<-fviz_dist(dist.manhattan,gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+plot.manhattan<-fviz_dist(dist.manhattan,
+                          gradient = list(low = "#00AFBB", 
+                                          mid = "white", 
+                                          high = "#FC4E07"))
 print(plot.manhattan)
-
-
 
 #dist.matrix=as.matrix(dist.eucl)
 
-#Buscando el k optimo
 
-silhouette<-fviz_nbclust(df.scale, kmeans, method = "silhouette")+labs(subtitle = "Metodo de siluetas")
+
+
+########################################################################################################
+#################################       Buscando el K Optimo          ##################################
+
+# Metodo de la silueta
+silhouette <- fviz_nbclust(df.scale, 
+                           kmeans, 
+                           method = "silhouette") + labs(subtitle = "Metodo de siluetas")
+
+# Mostrar grafico
 print(silhouette)
-wss<-fviz_nbclust(df.scale, kmeans, method = "wss")+labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
-print(wss)
-#Podemos ver el codo marcado en x =2 por lo que colocamos una linea en el para notarlo
 
-gap_stat<-fviz_nbclust(df.scale, kmeans, method = "gap_stat",iter.max=20)+labs(subtitle = "gap stadistict method")
+# Metodo del Codo
+wss <- fviz_nbclust(df.scale, 
+                    kmeans, 
+                    method = "wss") +labs(subtitle = "Metodo de codo")+geom_vline(xintercept = 2, linetype = 2)
+
+# Mostrar grafico
+print(wss)
+
+# Metodo de la brecha estadística
+gap_stat <- fviz_nbclust(df.scale, 
+                         kmeans, 
+                         method = "gap_stat",
+                         iter.max=20) + labs(subtitle = "gap stadistict method")
+
+# Mostrar Grafico
 print(gap_stat)
 
 # Se utiliza la función nbClust que utiliza diferentes métodos para analizar el número óptimo de clusters
-res.nbclust <- NbClust(df.scale, distance = "euclidean",
-                       min.nc = 2, max.nc = 9, 
-                       method = "complete", index ="all")
-factoextra::fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("NbClust's optimal number of clusters")
+res.nbclust <- NbClust(df.scale, 
+                       distance = "euclidean",
+                       min.nc = 2, 
+                       max.nc = 9, 
+                       method = "complete", 
+                       index ="all")
 
+# Se crea un gráfico de barras
+fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("Numero Optimo de Clusters (distancia euclidea)")
+
+# Se realiza el mismo procedimiento pero con la distancia de manhattan
+res.nbclust <- NbClust(df.scale, 
+                       distance = "manhattan",
+                       min.nc = 2, 
+                       max.nc = 9, 
+                       method = "complete", 
+                       index ="all")
+
+# Se crea un gráfico de barras
+fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("Numero Optimo de Clusters (distancia manhattan)")
 
 #Tenemos que 2 de los 3 metodos nos arrojan un k optimo = 2 por lo que podemos decir que este sera nuestro k
-#finalmente podemos graficarlos
-km.res = kmeans(df.scale, 2, nstart = 25)
-cluster_k2<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+
+# Se realiza el procedimiento de k-means para k=2
+km.res <- kmeans(df.scale, 
+                2, 
+                nstart = 25)
+
+# Se grafica el cluster
+cluster_k2 <- fviz_cluster(km.res, 
+                         data = df.scale, 
+                         palette = "jco", 
+                         ggtheme = theme_minimal(), 
+                         main = "K = 2")
+
+# Se muestra el grafico
 print(cluster_k2)
 
-km.res = kmeans(df.scale, 3, nstart = 25)
-cluster_k3-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+
+# Se realiza el procedimiento de k-means para k=3
+km.res <- kmeans(df.scale, 
+                3, 
+                nstart = 25)
+
+# Se crea el grafico de los clusters
+cluster_k3 <- fviz_cluster(km.res, 
+                        data = df.scale, 
+                        palette = "jco", 
+                        ggtheme = theme_minimal(), 
+                        main = "K = 3")
+
+# Se muestra el grafico
 print(cluster_k3)
 
-km.res = kmeans(df.scale, 4, nstart = 25)
-cluster_k4<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+
+# Se realiza el procedimiento de k-means para k=4
+km.res <- kmeans(df.scale, 
+                4, 
+                nstart = 25)
+
+# Se crea el grafico
+cluster_k4 <- fviz_cluster(km.res, 
+                         data = df.scale, 
+                         palette = "jco", 
+                         ggtheme = theme_minimal(), 
+                         main = "K = 4")
+
+# Se muestra el grafico
 print(cluster_k4)
 
-km.res = kmeans(df.scale, 6, nstart = 25)
-cluster_k6<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
+
+# Se realiza el procedimiento de k-means para k=6
+km.res <- kmeans(df.scale, 
+                6, 
+                nstart = 25)
+
+# Se crea el grafico
+cluster_k6 <- fviz_cluster(km.res, 
+                         data = df.scale, 
+                         palette = "jco", 
+                         ggtheme = theme_minimal(), 
+                         main = "K = 6")
+
+# Se muestra el grafico
 print(cluster_k6)
 
-ggarrange(cluster_k2, cluster_k3, cluster_k4, cluster_k6, nrow = 2, ncol = 2)
+# Se crea una figura con todos los graficos
+ggarrange(cluster_k2, 
+          cluster_k3, 
+          cluster_k4, 
+          cluster_k6, 
+          nrow = 2, 
+          ncol = 2)
 
-
-#km.res2 <- eclust(df.scale,FUNcluster="kmeans", k=4,hc_metric = "pearson")
-#cluster2<-fviz_cluster(km.res2, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-#print(cluster2)
-
-# km.res = kmeans(df.scale, 2, nstart = 25)
-# cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-# print(cluster)
-# 
-# km.res = kmeans(df.scale, 3, nstart = 25)
-# cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-# print(cluster)
-# 
-# km.res = kmeans(df.scale, 4, nstart = 25)
-# cluster<-fviz_cluster(km.res, data = df.scale, palette = "jco", ggtheme = theme_minimal())
-# print(cluster)
-
-
-#Segun los resultados obtenidos obtenidos obtenemos que el k obtimo en este caso es 2
