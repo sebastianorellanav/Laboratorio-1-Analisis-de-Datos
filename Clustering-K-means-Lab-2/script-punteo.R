@@ -18,6 +18,7 @@ library(RColorBrewer)
 library(missForest)
 library(factoextra)
 library(cluster)
+library(NbClust)
 
 # Se eliminan los graficos y variables antiguas
 rm(list=ls())
@@ -68,9 +69,10 @@ df = read.csv(url,
 set.seed(1234)
 ######################################################################################################
 ##########################        Limpieza de Datos        ###########################################
-#Se eliminar??n las variables de clase e id, dado que son datos no relevantes en esta parte del estudio,
-#en el caso de id es un simple identificador por lo que no aporta y en el caso de 
-#clase, esta es eliminada porque el Clustering es un m??todo no supervisado.
+
+# Se eliminar??n las variables de clase e id, dado que son datos no relevantes en esta parte del estudio,
+# en el caso de id es un simple identificador por lo que no aporta y en el caso de 
+# clase, esta es eliminada porque el Clustering es un m??todo no supervisado.
 df <- subset(df, select = -c(id))
 df.inicial<-df
 df <- subset(df, select = -c(class))
@@ -78,11 +80,11 @@ df <- subset(df, select = -c(class))
 #Para un vistaso previo aplicaremos un summary
 summary(df)
 
-#Para los datos "missing" se proceder?? a cambiar estos por un NA que es el valor default en los enteros cuando no
-#existe un dato
+# Para los datos "missing" se proceder?? a cambiar estos por un NA que es el valor default en los enteros cuando no
+# existe un dato
 df$bareNuclei[df$bareNuclei == "?"] = NA
 
-#Por otro lado convertiremos todos los datos a numericos para poder trabajarlos como tal
+# Por otro lado convertiremos todos los datos a numericos para poder trabajarlos como tal
 df[ , ] = apply(df[ , ], 2,function(x) as.numeric(as.character(x)) )
 
 #Para poder tratar estos datos se utilizara el metodo basado en Random Forest 
@@ -171,6 +173,11 @@ print(shapirotest)
 
 #para realizar clustering, es necesario escalar los datos. Esto debido a que se est?? ocupando una misma "regla" en las mediciones.
 df.scale=scale(df)
+
+res.nbclust <- NbClust(df.scale, distance = "euclidean",
+                       min.nc = 2, max.nc = 9, 
+                       method = "complete", index ="all")
+factoextra::fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("NbClust's optimal number of clusters")
 
 #Comparaci??n entre los datos antes de scalarlos y despues
 datos.long=melt(df)
