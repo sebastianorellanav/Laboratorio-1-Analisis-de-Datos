@@ -269,6 +269,12 @@ res.nbclust <- NbClust(df.scale,
 # Se crea un grafico de barras
 fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("Numero Optimo de Clusters (distancia manhattan)")
 
+
+
+
+
+########################################################################################################
+#################################             K -medias               ##################################
 #Tenemos que 2 de los 3 metodos nos arrojan un k optimo = 2 por lo que podemos decir que este sera nuestro k
 
 # Se realiza el procedimiento de k-means para k=2
@@ -344,6 +350,8 @@ ggarrange(cluster_k2,
 
 
 
+########################################################################################################
+###################       Comparación de Clusters con Clasificación Original          ##################
 
 clase.cluster<-as.numeric(cluster_k2$data$cluster)
 clase.cluster<-replace(clase.cluster,clase.cluster==1,4)
@@ -374,12 +382,11 @@ grafico.barra<-ggplot(data=df2, aes(x=Clase, y=Cantidad, fill=Prediccion)) +
 
 comparacion<- clase==clase.cluster
 acertacion=sum(comparacion)*100/length(clase)
-a<-paste("Acertacion ",as.character(round(acertacion,2)),"%",sep="")
+a<-paste("Acierto ",as.character(round(acertacion,2)),"%",sep="")
 b<-paste("Fallo ",as.character(100-round(acertacion,2)),"%",sep="")
 
-grafico.acertacion <- pie(c(acertacion,100-acertacion), labels = c(a,b),col=rainbow(2), main="% Casos Benignos vs Malignos")
+grafico.acertacion <- pie(c(acertacion,100-acertacion), labels = c(a,b),col=rainbow(2), main="Porcentaje de Acierto en el Agrupamiento")
 
-ggarrange(grafico.barra, 
-          grafico.acertacion,
-          nrow = 1, 
-          ncol = 2)
+grafico.barra
+
+# Fin del script
