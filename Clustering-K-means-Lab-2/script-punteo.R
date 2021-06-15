@@ -355,20 +355,31 @@ malignos.c<-sum(clase.cluster==4)
 benignos<-sum(clase==2)
 benignos.c<-sum(clase.cluster==2)
 
-data = data.frame(
-  name=c("Maligno Cluster","Maligno Inicial","Benigno Cluster","Benigno Inicial"),
-  value=c(malignos.c,malignos,benignos.c,benignos)
-)
 
-barplot(height=data$value,names=data$name,col=rgb(0.2,0.4,0.6,0.6))
+df2 <- data.frame(Prediccion=rep(c("Original", "Cluster"), each=2),
+                  Clase=rep(c("Benigno", "Maligno"),2),
+                  Cantidad=c(benignos, malignos, benignos.c, malignos.c))
 
+
+grafico.barra<-ggplot(data=df2, aes(x=Clase, y=Cantidad, fill=Prediccion)) +
+  geom_bar(stat="identity", position=position_dodge())+
+  geom_text(aes(label=Cantidad), vjust=1.6, color="white",
+            position = position_dodge(0.9), size=3.5)+
+  scale_fill_brewer(palette="Paired")+
+  theme_minimal()
 
 
 
 
 
 comparacion<- clase==clase.cluster
-acertacion=sum(comparacion)/length(clase)
-acertacion
+acertacion=sum(comparacion)*100/length(clase)
+a<-paste("Acertacion ",as.character(round(acertacion,2)),"%",sep="")
+b<-paste("Fallo ",as.character(100-round(acertacion,2)),"%",sep="")
 
-grafico.acertacion <- pie(c(acertacion,1-acertacion), labels = c("Acertaci??n","Fallo"),col=rainbow(2), main="% Casos Benignos vs Malignos")
+grafico.acertacion <- pie(c(acertacion,100-acertacion), labels = c(a,b),col=rainbow(2), main="% Casos Benignos vs Malignos")
+
+ggarrange(grafico.barra, 
+          grafico.acertacion,
+          nrow = 1, 
+          ncol = 2)
