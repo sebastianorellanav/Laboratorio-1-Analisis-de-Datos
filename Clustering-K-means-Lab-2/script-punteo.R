@@ -20,7 +20,7 @@ library(factoextra)
 library(cluster)
 library(NbClust)
 
-# Se limpia el ambiente de variables y los gráficos antiguos
+# Se limpia el ambiente de variables y los graficos antiguos
 rm(list=ls())
 if(length(dev.list())!=0){
   dev.off(dev.list()["RStudioGD"])
@@ -83,7 +83,7 @@ df <- subset(df, select = -c(class))
 # Resumen de los cuartiles de cada variable
 summary(df)
 
-# Para los datos "missing" se procede a cambiar los signos de interrogación por un NA, que es el valor
+# Para los datos "missing" se procede a cambiar los signos de interrogacisn por un NA, que es el valor
 # default en los enteros cuando no existe un dato
 df$bareNuclei[df$bareNuclei == "?"] = NA
 
@@ -142,13 +142,13 @@ print(bp)
 
 
 ########################################################################################################
-####################################       Estandarización         ####################################
+####################################       Estandarizacisn         ####################################
 
 # Antes de realizar el proceso de clustering, es necesario escalar los datos. Esto debido a que se 
 # ocupa una misma "regla" para las mediciones.
 df.scale=scale(df)
 
-# Comparacion entre los datos antes y después de realizar el escalamiento
+# Comparacion entre los datos antes y despuis de realizar el escalamiento
 # Se comvierten los datos a tipo long para graficarlos
 datos.long=melt(df)
 
@@ -168,7 +168,7 @@ qq <- ggqqplot(datos.long,
                x = "value",
                color = "Var2") + facet_wrap(~ Var2)
 
-# Se muestra el gráfico
+# Se muestra el grafico
 print(qq)
 
 
@@ -180,7 +180,7 @@ print(qq)
 #Para realizar el clustering se analizan las distancias entre los datos
 #Se calculan distintas distancias para compararlas
 
-# Distancia Euclídea
+# Distancia Euclmdea
 dist.eucl <- daisy(df.scale, 
                    metric = "euclidean", 
                    stand = FALSE)
@@ -238,7 +238,7 @@ wss <- fviz_nbclust(df.scale,
 # Mostrar grafico
 print(wss)
 
-# Metodo de la brecha estadística
+# Metodo de la brecha estadmstica
 gap_stat <- fviz_nbclust(df.scale, 
                          kmeans, 
                          method = "gap_stat",
@@ -247,7 +247,7 @@ gap_stat <- fviz_nbclust(df.scale,
 # Mostrar Grafico
 print(gap_stat)
 
-# Se utiliza la función nbClust que utiliza diferentes métodos para analizar el número óptimo de clusters
+# Se utiliza la funcisn nbClust que utiliza diferentes mitodos para analizar el nzmero sptimo de clusters
 res.nbclust <- NbClust(df.scale, 
                        distance = "euclidean",
                        min.nc = 2, 
@@ -255,7 +255,7 @@ res.nbclust <- NbClust(df.scale,
                        method = "complete", 
                        index ="all")
 
-# Se crea un gráfico de barras
+# Se crea un grafico de barras
 fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("Numero Optimo de Clusters (distancia euclidea)")
 
 # Se realiza el mismo procedimiento pero con la distancia de manhattan
@@ -266,7 +266,7 @@ res.nbclust <- NbClust(df.scale,
                        method = "complete", 
                        index ="all")
 
-# Se crea un gráfico de barras
+# Se crea un grafico de barras
 fviz_nbclust(res.nbclust) + theme_minimal() + ggtitle("Numero Optimo de Clusters (distancia manhattan)")
 
 #Tenemos que 2 de los 3 metodos nos arrojan un k optimo = 2 por lo que podemos decir que este sera nuestro k
@@ -342,3 +342,33 @@ ggarrange(cluster_k2,
           nrow = 2, 
           ncol = 2)
 
+
+
+
+clase.cluster<-as.numeric(cluster_k2$data$cluster)
+clase.cluster<-replace(clase.cluster,clase.cluster==1,4)
+clase<-df.inicial$class
+
+malignos<-sum(clase==4)
+malignos.c<-sum(clase.cluster==4)
+
+benignos<-sum(clase==2)
+benignos.c<-sum(clase.cluster==2)
+
+data = data.frame(
+  name=c("Maligno Cluster","Maligno Inicial","Benigno Cluster","Benigno Inicial"),
+  value=c(malignos.c,malignos,benignos.c,benignos)
+)
+
+barplot(height=data$value,names=data$name,col=rgb(0.2,0.4,0.6,0.6))
+
+
+
+
+
+
+comparacion<- clase==clase.cluster
+acertacion=sum(comparacion)/length(clase)
+acertacion
+
+grafico.acertacion <- pie(c(acertacion,1-acertacion), labels = c("Acertaci??n","Fallo"),col=rainbow(2), main="% Casos Benignos vs Malignos")
