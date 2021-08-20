@@ -118,12 +118,23 @@ bp <- ggboxplot(datos.long,
 print(bp)
 
 # Se Cambian los outliers encontrados por la media de la correspondiente variable
-df$marginalAdhesion[df$marginalAdhesion > 5] <- mean(df$marginalAdhesion)
-df$singleEpithCellSize[df$singleEpithCellSize > 4] <- mean(df$singleEpithCellSize)
-df$blandChromatin[df$blandChromatin > 4] <- mean(df$blandChromatin)
-df$normalNucleoli[df$normalNucleoli > 5] <- mean(df$normalNucleoli)
-df$mitoses[df$mitoses > 2] <- mean(df$mitoses)
+df$marginalAdhesion[df$marginalAdhesion > 8] <- mean(df$marginalAdhesion)
+df$singleEpithCellSize[df$singleEpithCellSize > 7] <- mean(df$singleEpithCellSize)
+df$blandChromatin[df$blandChromatin > 9] <- mean(df$blandChromatin)
+df$normalNucleoli[df$normalNucleoli > 8] <- mean(df$normalNucleoli)
+df$mitoses[df$mitoses > 1] <- mean(df$mitoses)
 
+#y regraficamos
+# Se conviernten los datos a tipo long para ser graficados
+datos.long<-melt(df)
+
+# Se crea un grafico de cajas
+bp <- ggboxplot(datos.long,
+                x = "variable", 
+                y = "value",
+                fill = "variable")
+
+print(bp)
 #luego Balanceamos las clases para poder trabajar correctamente con las reglas
 i <- which(df[["class"]] == "Benigno")
 j <- which(df[["class"]] == "Maligno")
@@ -206,7 +217,7 @@ uniformityCellShape= c(-Inf, 3, Inf)
 uniformityCellShape.names=c("Normal","Anormal")
 
 
-marginalAdhesion= c(-Inf, 3, Inf)
+marginalAdhesion= c(-Inf, 2, Inf)
 marginalAdhesion.names=c("Normal","Anormal")
 
 
@@ -248,8 +259,25 @@ rules = apriori(
   parameter=list(support = 0.2, minlen = 2, maxlen = 6, target="rules"),
   appearance=list(rhs = c("class=Benigno", "class=Maligno"))
 )
+
+
+rules.sanos = apriori(
+  data = df.reglas, 
+  parameter=list(support = 0.2, minlen = 2, maxlen = 6, target="rules"),
+  appearance=list(rhs = c("class=Benigno"))
+)
+
+
+rules.enfermos = apriori(
+  data = df.reglas, 
+  parameter=list(support = 0.2, minlen = 2, maxlen = 6, target="rules"),
+  appearance=list(rhs = c("class=Maligno"))
+)
+rules.enfermos=sort(x = rules.enfermos, decreasing = TRUE, by = "confidence")
+rules.sanos=sort(x = rules.sanos, decreasing = TRUE, by = "confidence")
 rules=sort(x = rules, decreasing = TRUE, by = "confidence")
 unlink("data.csv") # tidy up
 write(rules, file = "data.csv", sep = ",")
+
 
 
