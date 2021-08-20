@@ -276,12 +276,8 @@ rules.enfermos = apriori(
 rules.enfermos=sort(x = rules.enfermos, decreasing = TRUE, by = "confidence")
 rules.sanos=sort(x = rules.sanos, decreasing = TRUE, by = "confidence")
 rules=sort(x = rules, decreasing = TRUE, by = "confidence")
+unlink("data.csv") # tidy up
+write(rules, file = "data.csv", sep = ",")
 
 
-unlink("reglas_sanos.csv") # tidy up
-write(rules.sanos, file = "reglas_sanos.csv", sep = ",")
-unlink("reglas_enfermos.csv") # tidy up
-write(rules.enfermos, file = "reglas_enfermos.csv", sep = ",")
-unlink("reglas_full.csv") # tidy up
-write(rules, file = "reglas_full.csv", sep = ",")
 
