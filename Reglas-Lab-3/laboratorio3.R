@@ -249,5 +249,7 @@ rules = apriori(
   appearance=list(rhs = c("class=Benigno", "class=Maligno"))
 )
 rules=sort(x = rules, decreasing = TRUE, by = "confidence")
-write(rules, file = "data.csv", sep = ",")
 unlink("data.csv") # tidy up
+write(rules, file = "data.csv", sep = ",")
+
+
